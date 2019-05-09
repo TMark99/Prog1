@@ -1,0 +1,33 @@
+//preorder fabejárás:
+ void kiir(BINFA_PTR elem)
+          {
+           if (elem !=NULL)
+             {
+              ++melyseg
+              if (melyseg>max_melyseg) 
+              max melyseg = melyseg;
+              for (int i=0; i<melyseg;i++)
+              printf("---");
+              printf("%c(%d)\n",elem->ertek<2 ? '0' + elem->ertek : elem->ertek, melyseg-1);
+              kiir(elem->bal_nulla);
+              kiir(elem->jobb_egy);
+              --melyseg
+             }
+           }
+
+//postorder fabejárás:            
+void kiir(BINFA_PTR elem)
+          {
+           if (elem !=NULL)
+            {
+             ++melyseg
+             if (melyseg>max_melyseg) 
+             max melyseg = melyseg;
+             kiir(elem->bal_nulla);
+             kiir(elem->jobb_egy);
+             for (int i=0; i<melyseg;i++)
+             printf("---");
+             printf("%c(%d)\n",elem->ertek<2 ? '0' + elem->ertek : elem->ertek, melyseg-1);
+             --melyseg
+            }
+          }

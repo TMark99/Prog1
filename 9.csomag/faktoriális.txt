@@ -1,0 +1,12 @@
+Iteratív:
+(defun faktorialisi (n)
+    (do
+       ((i 1 (+ 1 i))
+        (prod 1 (* i prod)))
+       ((equal i (+ n 1)) prod)))
+
+Rekúrzív:
+(defun faktorialisr(n)
+(if (= n 1)
+    1
+    (* n (faktorialisr (- n 1)))))
