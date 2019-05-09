@@ -1,0 +1,614 @@
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude" version="5.0" xml:lang="hu">
+    <info>
+        <title>Helló, Turing!</title>
+        <keywordset>
+            <keyword/>
+        </keywordset>
+    </info>
+    <section>
+        <title>Végtelen ciklus</title>
+        <para>
+        	A könyvben szereplő összes forráskód megtalálható csomagonként összegyűjtve az alábbi linken: <link xlink:href="https://github.com/kissmate3/Prog1">https://github.com/kissmate3/Prog1</link>
+        </para>
+        <para>
+            A végtelen ciklus egy olyan ciklus, amelyben a feltétel állandóan adott(igaz), ezért a ciklus nem lép ki, hanem újra és újra lefut. például for(;;)
+        </para>
+        <para>
+             Vannak ciklusok amik a szálakat 100%-ban vagy 0%-ban dolgoztatják.             
+        </para>
+        <para>
+            0%-ban dolgoztat:
+        </para>   
+        <programlisting language="c"><![CDATA[
+#include <stdio.h>
+#include <unistd.h>
+
+int main(){
+while(1){
+		sleep(100);
+ }
+}
+        ]]></programlisting>
+        <para>
+           Magyarázat: Az unistd header tartalmazza a sleep() függvényt. Ezért kell include-olni az stdio.h  header (standart input/output) mellett. Az int main() a fő függvényünk.  A while() pedig a ciklus. A () belülre kell írnunk a feltételt. Amíg ez igaz , a ciklus újra és újra lefut.  A példánkban a ciklusban az 1 szám szerepel. Ez az érték mindig igazat ad vissza, tehát a ciklus állandóan újraindul amíg ki nem lőjjük. A sleep(100) függvény pedig azért kell,  mivel ez altatja a processzor folyamat szálát. A függvényben megadott érték jelenti azt, hogy hány másodpercig altatja a processzort.
+        </para>
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/2.csomag/vegt.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+        <para>
+        	100%-ban dolgoztat egy szálat:
+        </para>
+        <programlisting language="c"><![CDATA[
+#include <stdio.h>
+#include <unistd.h>
+int main(){
+while(1){
+ }
+}
+        ]]></programlisting>
+        <para>
+        	Magyarázat: Az előző példától nem sokban tér el. Az include-k és a ciklus magyarázata megegyezik, az előző példáéval. Itt annyi a különbség, hogy nincs benne a sleep() függvény, azaz a szál nincs altatva. Így a végtelen ciklus  100%-ban dolgoztat 1 szálat.
+        </para>
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/2.csomag/veg2.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+        <para>
+        	100%-ban dolgoztat minden szálat:
+        </para>
+        <programlisting language="c"><![CDATA[
+#include <stdio.h>
+#include <unistd.h>
+#include <omp.h>
+int main(){
+#pragma omp parallel
+while(1){
+} 
+}
+        ]]></programlisting>
+        <para>
+        	Magyarázat: A programunk, az előzőhöz egy openmp-vel bővült. Ezzel az include-val belépünk, a párhuzamos programozás küszöbére. #pragma omp parallel sor adja azt az utasítást a gépnek, hogy a feladat az összes szálon fusson. (A fordításnál -fopenmp kapcsolóval kell bővítenünk a parancsot.) 
+        </para>
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/2.csomag/vegt3.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+
+    </section>        
+        
+    <section>
+        <title>Lefagyott, nem fagyott, akkor most mi van?</title>
+        <para>
+            Mutasd meg, hogy nem lehet olyan programot írni, amely bármely más programról eldönti, hogy le fog-e fagyni vagy sem!
+        </para>
+        <para>
+            Megoldás forrása:  tegyük fel, hogy akkora haxorok vagyunk, hogy meg tudjuk írni a <function>Lefagy</function>
+            függvényt, amely tetszőleges programról el tudja dönteni, hogy van-e benne vlgtelen ciklus:              
+        </para>
+        <programlisting language="c"><![CDATA[Program T100
+{
+
+	boolean Lefagy(Program P)
+	{
+		 if(P-ben van végtelen ciklus)
+			return true;
+		 else
+			return false; 
+	}
+
+	main(Input Q)
+	{
+		Lefagy(Q)
+	}
+}]]></programlisting>            
+        <para>
+            A program futtatása, például akár az előző <filename>v.c</filename> ilyen pszeudókódjára:
+            <screen><![CDATA[T100(t.c.pseudo)
+true]]></screen>            
+            akár önmagára
+            <screen><![CDATA[T100(T100)
+false]]></screen>  
+            ezt a kimenetet adja.          
+        </para>
+        <para>
+            A T100-as programot felhasználva készítsük most el az alábbi T1000-set, amelyben a
+            Lefagy-ra épőlő Lefagy2 már nem tartalmaz feltételezett, csak csak konkrét kódot:
+        </para>
+        <programlisting language="c"><![CDATA[Program T1000
+{
+
+	boolean Lefagy(Program P)
+	{
+		 if(P-ben van végtelen ciklus)
+			return true;
+		 else
+			return false; 
+	}
+
+	boolean Lefagy2(Program P)
+	{
+		 if(Lefagy(P))
+			return true;
+		 else
+			for(;;); 
+	}
+
+	main(Input Q)
+	{
+		Lefagy2(Q)
+	}
+
+}]]></programlisting>            
+        <programlisting><![CDATA[]]></programlisting>            
+        <para>
+            Mit for kiírni erre a <computeroutput>T1000(T1000)</computeroutput> futtatásra?
+                                
+            <itemizedlist>
+                <listitem>
+                    <para>Ha T1000 lefagyó, akkor nem fog lefagyni, kiírja, hogy true</para>                        
+                </listitem>
+                <listitem>
+                    <para>Ha T1000 nem fagyó, akkor pedig le fog fagyni...</para>                        
+                </listitem>
+            </itemizedlist>
+            akkor most hogy fog működni? Sehogy, mert ilyen <function>Lefagy</function>
+            függvényt, azaz a T100 program nem is létezik.                
+        </para>
+        <para>
+            Tanulságok: Ha úgy vesszük, hogy a T100 és T1000 létező program és T1000 ben meghívjuk saját magát. A t100 alapján ha a programunkba van végtelen ciklus, akkor igaz értéket ad a Lefagy program a Lefagy2 programnak ,így tehát az is igaz értéket fog adni, viszont ha a Lefagy false értéket ad vissza akkor a Lefagy2 belém egy végtelen ciklusban, tehát a program le fog fagyni. Tehát olyan program mint a T100 nem működik mivel, ha egy olyan program érkezik bele amiben van végtelen ciklus, akkor a program beáll mert a ciklus nem áll meg. 
+        </para>
+    </section>        
+                
+    <section>
+        <title>Változók értékének felcserélése</title>
+        <para>
+            A feladat két változó értékének felcserélése. Például a=1 , b=2 , ebből lesz a megoldás, hogy a=2, b=1.
+
+            Napjainkba a számítógép fejlettsége és gyorsasága miatt, már egyszerűen megcsinálhatjuk egy segédváltozóval vagy exort-tal, de régen nagyon sokat számított az erőforrások jó felhasználása, elosztása. Ezért ezek a megoldásoknál sokkal könnyebb volt a számítógépeknek számolni, ha különbséggel vagy szorzással cseréltük fel a változókat. Az utóbbi kettőt nézzük most meg:
+        </para>
+        <para>
+            Változócsere különbséggel:
+        </para>
+        <programlisting language="c"><![CDATA[
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+    int a=1;
+    int b=2;
+
+    printf("%s\n%d %d\n","kulonbseggel:",a,b);
+
+    a=a-b;
+    b=a+b;
+    a=b-a;
+    printf("%d %d\n",a,b);
+}
+        ]]></programlisting>
+        <para>
+            Magyarázat: A fejlécet már ismerjük az előző feladatból. A printf() függvény  a kiíratáshoz kell majd nekünk. az első argumentum a kíratás formátuma, a többi pedig a változók kiíratása. A „%d” azt jelenti, hogy egy egész típusú változót fogunk kiíratni, még a „\n” a sortörést jelenti. Maga a feladat egyszerű matematika. Legegyszerűbben a példával lehet megérteni.
+        </para>
+        <para>      
+            a=1, b=2
+        </para>
+        <para>
+            a=1-2=-1  „a” értéke -1 lesz.
+        </para>
+        <para>
+            b=-1+2=1 „b” értéke 1 lesz, ami az „a” értéke volt.
+        </para>
+        <para>
+            a=1-(-1)=2  az „a” értéke 2, ami a „b” értéke volt
+        </para>
+        <para>
+            Kész is a cserénk.
+        </para> 
+        <para>
+            Változócsere szorzattal:
+        </para>
+        <programlisting language="c"><![CDATA[
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+    int a=1;
+    int b=2;
+
+    printf("%s\n%d %d\n","szorzassal:",a,b);
+
+    a=a*b;
+    b=a/b;
+    a=a/b;
+
+    printf("%d %d\n",a,b);
+}
+        ]]></programlisting>
+        <para> 
+        	Magyarázat: A megoldás itt annyiban különbözik, hogy nem „+” és „–„ -t használunk hanem „*” és „/” -t. Példa:
+        </para> 
+         <para>      
+            a=1, b=2
+        </para>
+        <para>
+            a=1*2=2  „a” értéke 2 lesz.
+        </para>
+        <para>
+            b=-2/2=1 „b” értéke 1 lesz, ami az „a” értéke volt.
+        </para>
+        <para>
+            a=2/1=2  az „a” értéke 2, ami a „b” értéke volt.
+        </para>
+        <para>
+            Kész is a cserénk.
+        </para>        
+    </section>                     
+
+    <section>
+        <title>Labdapattogás</title>
+        <programlisting language="c"><![CDATA[
+#include <stdio.h>
+#include <curses.h>
+#include <unistd.h>
+
+int
+main ( void )
+{
+    WINDOW *ablak;
+    ablak = initscr ();
+
+    int x = 0;
+    int y = 0;
+
+    int xnov = 1;
+    int ynov = 1;
+
+    int mx;
+    int my;
+
+    for ( ;; ) {
+
+        getmaxyx ( ablak, my , mx );
+
+        mvprintw ( y, x, "O" );
+
+        refresh ();
+        usleep ( 100000 );
+
+        x = x + xnov;
+        y = y + ynov;
+
+        if ( x>=mx-1 ) {
+            xnov = xnov * -1;
+        }
+        if ( x<=0 ) { 
+            xnov = xnov * -1;
+        }
+        if ( y<=0 ) { 
+            ynov = ynov * -1;
+        }
+        if ( y>=my-1 ) { 
+            ynov = ynov * -1;
+        }
+
+    }
+
+    return 0;
+}
+        ]]></programlisting>
+        <para>
+        	Forrás:<link xlink:href="https://bhaxor.blog.hu/2018/08/28/labdapattogas">https://bhaxor.blog.hu/2018/08/28/labdapattogas</link>
+        </para>
+        <para>
+            Magyarázat: Az új dolog ami a fejlécnél feltűnik az a curses.h header. Ez képernyő kezelési függvényeket tartalmaz, és a program megjelenítéséhez szükségünk van rá.
+        </para>
+        <para>
+            A következő részlet:
+        </para>
+        <programlisting language="c"><![CDATA[
+    WINDOW *ablak;
+    ablak = initscr ();
+        ]]></programlisting>
+        <para>
+             Így formázzuk meg a kimenetet. Az initscr () függvény curses módba lépteti a terminált.
+        </para>
+        <para>
+            A deklarált x és y -on lesz a kezdő értékünk. Az xnov és ynov pedig a lépésközöt mutatja. (lépésenként a koordináta rendszeren xnov, ynov-al való elmozdulást). Az mx és my lesznek a határértékek, hogy a program csak az ablakon belül mozogjon.
+        </para>
+        <para>
+            A végtelen ciklus következtében, a labda addif pattog, amíg ki nem lőjük a programot. A ciklusban az első függvény a getmaxyx () . Ez határozza meg,hogy mekkora az ablakunk mérete. refresh() függvénnyel frissítjük az ablakot. Közöttük a mvprintw() függvény az x és y tengelyen megrazolja a „ „ között lévő szöveget, számot vagy karaktert, esetünkben az O-t. Az usleep függvény azt szabályozza mennyi ideig altassa a ciklust még újra indul, azaz milyen gyorsan pattogjon a labda. 
+        </para>
+        <programlisting language="c"><![CDATA[
+        x = x + xnov;
+        y = y + ynov;
+        ]]></programlisting>
+        <para>
+        	Megnöveljük az értékeket, minden ciklus lefutásnál (mozog a "labda").
+        </para>
+        <para>
+        	A kővetkező négy if-el pedig azt vizsgáljuk, hogy a labda az ablak szélén van e, ha igen akkor -1 -el szorozzuk, ezáltal a labda irányt változtat. A fordításnál -lncourses kapcsolót kell használnunk.
+        </para>
+        <para>
+        	Nézzük ugyan ezt a feladatot "if" nélkül:
+        </para>
+        <para>
+        	Forrás:<link xlink:href="https://progpater.blog.hu/2011/02/13/megtalaltam_neo_t">https://progpater.blog.hu/2011/02/13/megtalaltam_neo_t</link>
+        </para>
+        <programlisting language="c"><![CDATA[
+ #include <stdio.h>
+#include <stdlib.h>
+#include <curses.h>
+#include <unistd.h>
+
+int
+main (void)
+{
+    int xj = 0, xk = 0, yj = 0, yk = 0;
+    int mx = 80 * 2, my = 24 * 2;
+
+    WINDOW *ablak;
+    ablak = initscr ();
+    noecho ();
+    cbreak ();
+    nodelay (ablak, true);
+
+    for (;;)
+    {
+        xj = (xj - 1) % mx;
+        xk = (xk + 1) % mx;
+
+        yj = (yj - 1) % my;
+        yk = (yk + 1) % my;
+
+        clear ();
+
+        mvprintw (0, 0,
+                  "--------------------------------------------------------------------------------");
+        mvprintw (24, 0,
+                  "--------------------------------------------------------------------------------");
+        mvprintw (abs ((yj + (my - yk)) / 2),
+                  abs ((xj + (mx - xk)) / 2), "X");
+
+        refresh ();
+        usleep (150000);
+
+    }
+    return 0;
+}
+        ]]></programlisting>
+        <para>
+        	Magyarázat: A prgoramunk ugyan azt csinálja mint az "if"-es változata. Csak ugye most logikai kifejezés, utasítás nélkül. A megoldáshoz szükségünk van matematikai számításokra, ehez deklarálunk egész tipusú változókat. A számításokat egy végtelen ciklusban számoljuk és mvprinw-vel íratjuk ki a képernyőre. A clear()-el minden egyes számítás előtt letisztítjuk az ablakot. az eslő kettő mvprintw-vel a felső és alsó határokat rajzoljuk ki. A 3 al pedig a "Labdát". Az Usleep függvény itt is a pattogás sebbeségét határozza meg.
+        </para> 
+    </section>                     
+
+    <section>
+        <title>Szóhossz és a Linus Torvalds féle BogoMIPS</title>
+        <para>
+            Szóhossz: 
+        </para>
+        <programlisting language="c"><![CDATA[
+#include <stdio.h>
+
+int main()
+{
+   int a=1;
+   int bit=0;
+   do
+   bit++;	
+   while(a<<=1);
+   printf("%d %s\n",bit,"bites a szohossz a gepen");
+} 
+
+        ]]></programlisting>
+        <para>
+          Ez a program a gépünk szó hosszát fogja kiírni, azaz az <type>int</type> méretét.
+          A feladatot a BogoMIPS ben használt while ciklus feltétellel írjuk meg (A BogoMIPS a processzorunk sebbeségét lemérő program amit Linus Torvalds írt meg). 
+        </para>
+        <para>
+          A main függvényben az első sor az int a=1.  Itt deklaráljuk a változót, amivel vizsgáljuk meg a gépünk szóhosszát(Az int méretét).  A "bit" változó fogja a lépéseket számlálni. A programot dowhile ciklussal(hátultesztelős) futtatjuk, mivel a sima while nem számítaná bele az első lépést, tehát ha a gépünk 32 bites, a program 31 bitet írna. A ciklus addig fut amíg az "a" nem lesz egyenlő nullával.  És akkor mi is az a bitshift operátor. Ugye vesszük az 1 et, a=1. ennek a Bináris kódja a 0001, a bitshift operátor egy 0 -val eltolja, azaz 0010 kapjuk, ez a 2 szám, a count növekedik tehát az értéke 1 lesz.  A ciklus újra lefut és eltolja még egyszer a számot egy 0-val, így 0100 kapunk ami a négy.  Ez addig fut, még a gépünk szó hosszán (az int méretén) kívül nem tolja az 1-est. Ekkor az a értkében csak 0 fog szerepelni, azaz az "a" értéke 0 lesz, a while ciklus befejeződik, és kiíratjuk hányat lépett a ciklus, és ez a szám adja meg, hogy hány bites a szóhossz.
+        </para>
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/2.csomag/szo.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+    </section>                     
+
+    <section>
+        <title>Helló, Google!</title>
+        <para>
+            
+        </para>
+        <para>
+            A PageRank egy keresőmotor amit a Google használ. A programot két fiatal írta meg 1998-ban. Nevét az egyik kitalálója után kapta. 
+        </para>
+        <para>
+        	A következőben, egy 4 lapból álló PageRank-at fogunk megnézni. A lapok PageRank-ét az alapján nézzük, hogy hány oldal osztotta meg a saját honlapján az oldal hiperlinkjét. 
+        </para>
+        <programlisting language="c"><![CDATA[
+#include <stdio.h>
+#include <math.h>
+
+void
+kiir (double tomb[], int db)
+{
+  int i;
+
+  for (i = 0; i < db; ++i)
+    printf ("%f\n", tomb[i]);
+}
+
+double
+tavolsag (double PR[], double PRv[], int n)
+{
+  double osszeg = 0.0;
+  int i;
+
+  for (i = 0; i < n; ++i)
+    osszeg += (PRv[i] - PR[i]) * (PRv[i] - PR[i]);
+
+  return sqrt(osszeg);
+}
+
+int
+main (void)
+{
+
+  double L[4][4] = {
+    {0.0, 0.0, 1.0 / 3.0, 0.0},
+    {1.0, 1.0 / 2.0, 1.0 / 3.0, 1.0},
+    {0.0, 1.0 / 2.0, 0.0, 0.0},
+    {0.0, 0.0, 1.0 / 3.0, 0.0}
+  };
+
+  double PR[4] = { 0.0, 0.0, 0.0, 0.0 };
+  double PRv[4] = { 1.0 / 4.0, 1.0 / 4.0, 1.0 / 4.0, 1.0 / 4.0 };
+
+  int i, j;
+
+  for (;;)
+    {
+
+      for (i = 0; i < 4; ++i)
+	{
+	  PR[i] = 0.0;
+	  for (j = 0; j < 4; ++j)
+	    PR[i] += (L[i][j] * PRv[j]);
+	}
+      if (tavolsag (PR, PRv, 4) < 0.00000001)
+	break;
+
+      for (i = 0; i < 4; ++i)
+	PRv[i] = PR[i];
+
+    }
+
+  kiir (PR, 4);
+
+  return 0;
+}
+        ]]></programlisting>
+        <para>
+        	Forrás:<link xlink:href="https://progpater.blog.hu/2011/02/13/bearazzuk_a_masodik_labort">https://progpater.blog.hu/2011/02/13/bearazzuk_a_masodik_labort</link>
+        </para>
+        <para>
+        	Kezdjük az új headerrel, ez a math.h. Ez tartalmazza a matematikai számításokhoz szükséges függvényeket. A main() fügvénnyben először is létrehozunk egy mátrixot, ami a lapok összeköttetését adja meg. Ha az érték 0 akkor a lap nincs összekötve az adott lappal és persze önmagával sincs. Ahol 1/2 vagy 1/3 az érték az azt jelzi, hogy az oldal hány oldallal van összekötve, például az 1/2: Az oldal 2 oldallal van összekötve és abbol az egyik kapcsolatot jelzi (az 1). 
+        </para>
+        <para>
+        	A PR tömb fogja a PageRank értéket tárolni. A PRv tömb pedig a mátrixal való számításokhoz kell. A következő lépés egy végtelen ciklus.Ez majd a számítások végén a break parancsal lép ki, ha a megadott feltétel teljesül. A forciklusban van maga a PageRank számítása ami majd a tavolság függvényt is meghívja, ami egy részszámolást tartalmaz. A végtelen cikluson belül lévő ciklusok azért 4 ig mennek mert 4 oldalt nézünk. A ciklusbol való kilépés a "break" parancsal történik majd ha a tavolsag függvényben kapott eredmény kisebb mint 0.00000001. A végén a kiir függvény megkapja a PR értékeket és az oldalak számát és kiíratja azokat.
+        </para>
+    </section>
+
+    <section xml:id="Brun">
+        <title>100 éves a Brun tétel</title>
+         <para>
+            A tételt Viggo Brun bizonyította 1919-ben. Ezért is nevezték el róla. A tétel kimondja hogy az ikerprímek reciprokösszege a Brun konstanthoz konvergál, ami egy véges érték.
+        </para>
+        <para>
+        Brun tétel R szimulációban:
+        </para>
+        <programlisting language="c"><![CDATA[
+library(matlab)
+
+stp <- function(x){
+
+    primes = primes(x)
+    diff = primes[2:length(primes)]-primes[1:length(primes)-1]
+    idx = which(diff==2)
+    t1primes = primes[idx]
+    t2primes = primes[idx]+2
+    rt1plust2 = 1/t1primes+1/t2primes
+    return(sum(rt1plust2))
+}
+
+x=seq(13, 1000000, by=10000)
+y=sapply(x, FUN = stp)
+plot(x,y,type="b")
+        ]]></programlisting>
+        <para>
+            A számoláshoz elősször is kell egy matlab könyvtár. A program fő része az stp függvény. egy a függvény megkapja x-et. X egy szam lesz ami megmondja meddig kell a prímeket számolni. Ehez a primes függvényt használjuk. primes(x) kiírja x-ig a prímeket. A diff vektorban eltároljuk a primes vektorban tárolt egymás melletti prímek különbségét. A számítást úgy végezzük, hogy a 2 prímtől indulva kivonjuk a prímből az előtte lévő prímet. Az idx el vizsgaljuk meg, hogy mely prímek különbsége 2 és ezek hol vannak (a helyüket a which függvény adja meg). a t1primes vektorban elhelyezzük ezeket a prímeket. A t2primes vektorba pedig ami ezeknél a prímeknél kettővel nagyobb (azaz ikerprímek). rt1plust2 vektorban végezzük a recikropképzést és a pár reciprokát összeadjuk. A returnban pedig a sum függvénnyel vissza adjuk ezek summázott összegét. Végezetül a plot függvénnyel lerajzoljuk grafikusan. 
+        </para>
+        <para>
+            Megoldás forrása: <link xlink:href="https://gitlab.com/nbatfai/bhax/blob/master/attention_raising/Primek_R">https://gitlab.com/nbatfai/bhax/blob/master/attention_raising/Primek_R</link>
+        </para>
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/2.csomag/halm.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+    </section>
+    
+    <section xml:id="bhax-textbook-feladatok-turing.MontyHall">
+        <title>A Monty Hall probléma</title>
+        <para>
+            Tutorált: Földesi Zoltán
+        </para>
+        <para>
+           Ez egy valószínűségi paradoxon. A kérdés egy vetélkedő játékból indul. Van 3 ajtó és az egyik mögött egy értékes nyeremény van, a másik kettő mögött semmi. A versenyzőnek a 3 ajtó közül választania kell egyet. Miután választott, a műsorvezető kinyit egy ajtót, ami mögött nincs a nyeremény. Felteszi a kérdést, hogy akarunk e változtatni a választásunkon. Itt jön a felvetés, hogy megéri e változtatni, vagy nem. 
+        </para>
+        <para>
+            Megoldás:Első ránézésre mi is, és szinte mindenki azt mondaná, hogy nem számít, hogy vált e mert 50-50% az esélye, hogy melyik ajtó mögött van a nyeremény. Mivel már nem 3 hanem 2 ajtó közül lehet választani, így már figyelembe se veszik azt a harmadik ajtót. De a megoldás az, hogy igen, nagyobb az esélyünk akkor ha az előző döntésünket megváltoztatjuk és a másik ajtót választjuk. 
+        </para>
+        <para>
+            Magyarázat: Kezdetben 3 ajtóbol 1 ajtót kell választanunk, azaz 1/3 az eséyle , hogy eltaláljuk a jó megoldást és 2/3 hogy nem. Ezek után a műsorvezető kinyit egy ajtót ami mögött nincs a nyeremény. Ez a kezdeti valószínűségen nem változtat, úgyanúgy 1/3 eséllyel választottuk azt az ajtót ami mögött a nyeremény van. Viszont azok az ajtók közül ami mögött nincs semmi, azokból már csak az egyik van csukva. Biztosra tudjuk, hogy a nyeremény a maradék két ajtó közül valamelyik mögött van. Tehát 2/3 az esélye annak, hogy a másik ajtó mögött van a nyeremény.
+        </para>
+        <para>
+            Megoldás forrása: <link xlink:href="https://gitlab.com/nbatfai/bhax/blob/master/attention_raising/MontyHall_R/mh.r">https://gitlab.com/nbatfai/bhax/blob/master/attention_raising/MontyHall_R/mh.r</link>
+        </para>
+        <para>
+            Szimuláció:
+        </para>
+        <programlisting language="c"><![CDATA[
+kiserletek_szama=10000
+kiserlet = sample(1:3, kiserletek_szama, replace=T)
+jatekos = sample(1:3, kiserletek_szama, replace=T)
+musorvezeto=vector(length = kiserletek_szama)
+
+for (i in 1:kiserletek_szama) {
+
+    if(kiserlet[i]==jatekos[i]){
+    
+        mibol=setdiff(c(1,2,3), kiserlet[i])
+    
+    }else{
+    
+        mibol=setdiff(c(1,2,3), c(kiserlet[i], jatekos[i]))
+    
+    }
+
+    musorvezeto[i] = mibol[sample(1:length(mibol),1)]
+
+}
+
+nemvaltoztatesnyer= which(kiserlet==jatekos)
+valtoztat=vector(length = kiserletek_szama)
+
+for (i in 1:kiserletek_szama) {
+
+    holvalt = setdiff(c(1,2,3), c(musorvezeto[i], jatekos[i]))
+    valtoztat[i] = holvalt[sample(1:length(holvalt),1)]
+    
+}
+
+valtoztatesnyer = which(kiserlet==valtoztat)
+
+
+sprintf("Kiserletek szama: %i", kiserletek_szama)
+length(nemvaltoztatesnyer)
+length(valtoztatesnyer)
+length(nemvaltoztatesnyer)/length(valtoztatesnyer)
+length(nemvaltoztatesnyer)+length(valtoztatesnyer)
+
+        ]]></programlisting>
+        <para>
+        	Most a kisérletet 10000x fogjuk szimulálni. a kiserlet vektorban 1 és 3 "ajtó" közül választunk 10000x. A replace=T-vel tesszük lehetővé, hogy egy eredmény többször is kijöhessen. A játékos valasztásait a jatekos vektornál ugyan így meghatározzuk.A sample() fügvénnyel végezzük aa kiválasztást. A musorvezeto vektort a length függvényel a kisérletek számával tesszük egyenlővé. Következik a for ciklus ami i=1 től a kisérletek számáig fut (10000). A ciklusban egy feltétel vizsgálat következik. az if-fel megvizsgáljuk, hogy a játékos álltal választott ajtó megegyezik e a kisérletben szereplő ajtóval. Ha a feltétel igaz egy mibol vektorba beletesszük azokat az ajtokat amiket a játékos nem választott, az else ágon pedig ha a feltétel nem igaz ,akkor azt az ajtót eltároljuk amit nem a választott és a nyereményt rejtő ajtót. A musorvezeto vektorban pedig azt az ajtót amit ki fog nyitni. A nemvaltoztat es nyer vektorban azok az esetek vannak amikor a jatékos azt az ajtót választotta elsőre ami mögött az ajtó van és nem változtat a döntésén. A valtoztat vektorban pedig azt mikor megváltozatja a döntését és így nyer ezt egy forciklussal vizsgaljuk. A legvégén kiíratjuk az eredményeket, hogy melyik esetben hányszor nyert.  
+
+        </para>
+    </section>
+
+</chapter>                

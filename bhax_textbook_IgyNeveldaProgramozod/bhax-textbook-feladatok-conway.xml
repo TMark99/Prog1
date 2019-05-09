@@ -1,0 +1,518 @@
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude" version="5.0" xml:lang="hu">
+    <info>
+        <title>Helló, Conway!</title>
+        <keywordset>
+            <keyword/>
+        </keywordset>
+    </info>
+    <section>
+        <title>Hangyaszimulációk</title>
+        <para>
+            Írj Qt C++-ban egy hangyaszimulációs programot, a forrásaidról utólag reverse engineering jelleggel
+            készíts UML osztálydiagramot is!
+        </para>
+        <para>
+        	Ebben a feladatban egy QT programban fogjuk szimulálni a hangyák mozgását. A való éetben a hangyák sose zavarodnak össze, sose torlódnak fel, sőt minél többen vannak annál jobban és gyorsabban mozognak. Továbbá tudjuk , hogy a látásuk nem a legjobb. Tehát a kulcs az egymás közötti komunikáció, ezt feromonokkal érik el. Ebben a szimulációban mi is úgymond feromonokkal fogjuk a hangyák közötti kommunikációt elérni. A szabály, hogy mindig a legerősebb feromonú hanyga felé lépünk, a programban látszik, hogy a hanygák feromon csíkot hagynak maguk után, ami idő elteltével egyre gyengül míg el nem tűnik.
+        </para>
+        <para>
+            Megoldás videó: <link xlink:href="https://bhaxor.blog.hu/2018/10/10/myrmecologist">https://bhaxor.blog.hu/2018/10/10/myrmecologist</link>
+        </para>
+        <para>
+            Kód forrása: <link xlink:href="https://gitlab.com/nbatfai/bhax/tree/master/attention_raising/Myrmecologist">https://gitlab.com/nbatfai/bhax/tree/master/attention_raising/Myrmecologist</link>               
+        </para>
+        <para>
+            Kód:(csak a main.cpp van itt a többi kód a forrásnál található)
+        </para>  
+        <programlisting language="c"><![CDATA[   
+#include <QApplication>
+#include <QDesktopWidget>
+#include <QDebug>
+#include <QDateTime>
+#include <QCommandLineOption>
+#include <QCommandLineParser>
+
+#include "antwin.h"
+
+int main ( int argc, char *argv[] )
+{
+
+    QApplication a ( argc, argv );
+
+    QCommandLineOption szeles_opt ( {"w","szelesseg"}, "Oszlopok (cellakban) szama.", "szelesseg", "200" );
+    QCommandLineOption magas_opt ( {"m","magassag"}, "Sorok (cellakban) szama.", "magassag", "150" );
+    QCommandLineOption hangyaszam_opt ( {"n","hangyaszam"}, "Hangyak szama.", "hangyaszam", "100" );
+    QCommandLineOption sebesseg_opt ( {"t","sebesseg"}, "2 lepes kozotti ido (millisec-ben).", "sebesseg", "100" );
+    QCommandLineOption parolgas_opt ( {"p","parolgas"}, "A parolgas erteke.", "parolgas", "8" );
+    QCommandLineOption feromon_opt ( {"f","feromon"}, "A hagyott nyom erteke.", "feromon", "11" );
+    QCommandLineOption szomszed_opt ( {"s","szomszed"}, "A hagyott nyom erteke a szomszedokban.", "szomszed", "3" );
+    QCommandLineOption alapertek_opt ( {"d","alapertek"}, "Indulo ertek a cellakban.", "alapertek", "1" );
+    QCommandLineOption maxcella_opt ( {"a","maxcella"}, "Cella max erteke.", "maxcella", "50" );
+    QCommandLineOption mincella_opt ( {"i","mincella"}, "Cella min erteke.", "mincella", "2" );
+    QCommandLineOption cellamerete_opt ( {"c","cellameret"}, "Hany hangya fer egy cellaba.", "cellameret", "4" );
+    QCommandLineParser parser;
+
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.addOption ( szeles_opt );
+    parser.addOption ( magas_opt );
+    parser.addOption ( hangyaszam_opt );
+    parser.addOption ( sebesseg_opt );
+    parser.addOption ( parolgas_opt );
+    parser.addOption ( feromon_opt );
+    parser.addOption ( szomszed_opt );
+    parser.addOption ( alapertek_opt );
+    parser.addOption ( maxcella_opt );
+    parser.addOption ( mincella_opt );
+    parser.addOption ( cellamerete_opt );
+
+    parser.process ( a );
+
+    QString szeles = parser.value ( szeles_opt );
+    QString magas = parser.value ( magas_opt );
+    QString n = parser.value ( hangyaszam_opt );
+    QString t = parser.value ( sebesseg_opt );
+    QString parolgas = parser.value ( parolgas_opt );
+    QString feromon = parser.value ( feromon_opt );
+    QString szomszed = parser.value ( szomszed_opt );
+    QString alapertek = parser.value ( alapertek_opt );
+    QString maxcella = parser.value ( maxcella_opt );
+    QString mincella = parser.value ( mincella_opt );
+    QString cellameret = parser.value ( cellamerete_opt );
+
+    qsrand ( QDateTime::currentMSecsSinceEpoch() );
+
+    AntWin w ( szeles.toInt(), magas.toInt(), t.toInt(), n.toInt(), feromon.toInt(), szomszed.toInt(), parolgas.toInt(),
+                  alapertek.toInt(), mincella.toInt(), maxcella.toInt(),
+                  cellameret.toInt() );
+
+    w.show();
+
+    return a.exec();
+}
+}
+      	]]></programlisting>
+      	<para>
+      		Kezdjük az ant.h tartalmazza a hangya tulajdonságait. Hol van az x és y tengelyen és hogy merre mutat az iránya, merre megy. Az antwin-ban van pedig a hangyaboly(ants). Továbbá ezen belül adjuk meg, hogy egy cella hány pixelből álljon és hogy az ablak szélessége és magassága hány. Forciklus-okkal felépítjük cellákból az ablakot és elhelyezzük benne a hangyákat(azt ant-ből). Új és új hangyák jelennek meg. Ezek megváltoztatják a régebbi hanygák irányát. Az antwin.h tartalmazza a billentyűzet parancsait, például a p vel megállítjuk a folyamatot. Az anttheard.cpp tartalmazza a mozgáshoz, törléshez, az új irány megadásához, a hangyák számának eltárolásához szükséges függvényeket. Itt vizsgálja azt is hogy a hanygák száma nő e vagy csökken az idő mulásával.
+      	</para> 
+      	<mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/7.csomag/hangy.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+        <mediaobject>
+            <imageobject condition="printf">
+                <imagedata fileref="/home/kissmate3/Desktop/Prog1/7.csomag/kmp.png" format="PNG" scale="30"/>
+            </imageobject>
+        </mediaobject> 
+        <para>
+        	A kép, a megoldás videóbol származik. 
+        </para>            
+    </section>        
+    <section>
+        <title>Java életjáték</title>
+        <para>
+            Írd meg Java-ban a John Horton Conway-féle életjátékot, 
+            valósítsa meg a sikló-kilövőt!
+        </para>
+        <para>
+        	Az életjátékpt azaz sejtautómatákat először Naumen János vetette fel. A felvetés a gép önreprodukciójának matematikai modellalkotást tartalmazta. A legismertebb modell a John Horton Conway-féle életjáték. Maga a "játék" egy négyzetrácsos mezön zajlik amin mozognak a sejtek. A sejtek "élete" szabályokhoz van kötve. Megvan adva hogy mi a feltétele hogy egy sejt létrejöjjön, életbenmadardjon vagy elpusztuljon. Conway erre 3 feltételt szabott meg:
+        </para>
+        <para>
+        	1.szabály: Egy sejt csak úgy éli túl, ha kettő vagy három szomszédja van.
+        </para>
+        <para>
+        	2.szabály: Egy sejt akkor pusztul el, ha kettőnél kevesebb szomszédja van. Ezt elszgetelődésnek hívjuk.A másik eset hogy akkor pusztul el ha háromnál több szomszédja van. Ezt túlnépesedésnek hívjuk.
+        </para>
+         <para>
+        	3.szabály: A harmadik szabály a születésre vonatkozik, és akkor történik meg ha egy cellának a körzetében 3 sejt található.
+        </para>
+        <para>
+        	Ezen a 3 szabály meghatározásával kapunk egy önműködő sejtautómatát. Beleszolásunk csak kezdetben van, utánna a szabyályok szerint önállóan működik a program. Mi most külön a sikló-kilövőt fogjuk vizsgálni. Hogy ezt elérjük, rőgzítenünk kell adott cellákban sejteket, így létre jőn egy "sikló ágyú", ez időközönként "siklókat" fog lőni.
+        </para>
+        <para>
+            Megoldás forrása: <link xlink:href="https://www.tankonyvtar.hu/hu/tartalom/tkt/javat-tanitok-javat/apb.html?fbclid=IwAR0Gc-Q7v353l_qDrqAd4LfIhWrzTwYnnsTZ5wTpBAhQjwZ63pl2moebOpY">https://www.tankonyvtar.hu/hu/tartalom/tkt/javat-tanitok-javat/apb.html?fbclid=IwAR0Gc-Q7v353l_qDrqAd4LfIhWrzTwYnnsTZ5wTpBAhQjwZ63pl2moebOpY</link>               
+        </para>
+        <para>
+        	Kód:
+        </para>
+        <programlisting language="c"><![CDATA[   
+public class Sejtautomata extends java.awt.Frame implements Runnable {
+    public static final boolean ÉLŐ = true;
+    public static final boolean HALOTT = false;
+    protected boolean [][][] rácsok = new boolean [2][][];
+    protected boolean [][] rács;
+    protected int rácsIndex = 0;
+    protected int cellaSzélesség = 20;
+    protected int cellaMagasság = 20;/
+    protected int szélesség = 20;
+    protected int magasság = 10;  
+    protected int várakozás = 1000;
+    private java.awt.Robot robot;
+    private boolean pillanatfelvétel = false;
+    private static int pillanatfelvételSzámláló = 0;
+    public Sejtautomata(int szélesség, int magasság) {
+        this.szélesség = szélesség;
+        this.magasság = magasság;
+        rácsok[0] = new boolean[magasság][szélesség];
+        rácsok[1] = new boolean[magasság][szélesség];
+        rácsIndex = 0;
+        rács = rácsok[rácsIndex];
+        for(int i=0; i<rács.length; ++i)
+            for(int j=0; j<rács[0].length; ++j)
+                rács[i][j] = HALOTT;
+        siklóKilövő(rács, 5, 60);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                setVisible(false);
+                System.exit(0);
+            }
+        });
+        addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                if(e.getKeyCode() == java.awt.event.KeyEvent.VK_K) {
+                    cellaSzélesség /= 2;
+                    cellaMagasság /= 2;
+                    setSize(Sejtautomata.this.szélesség*cellaSzélesség,
+                            Sejtautomata.this.magasság*cellaMagasság);
+                    validate();
+                } else if(e.getKeyCode() == java.awt.event.KeyEvent.VK_N) {
+                    cellaSzélesség *= 2;
+                    cellaMagasság *= 2;
+                    setSize(Sejtautomata.this.szélesség*cellaSzélesség,
+                            Sejtautomata.this.magasság*cellaMagasság);
+                    validate();
+                } else if(e.getKeyCode() == java.awt.event.KeyEvent.VK_S)
+                    pillanatfelvétel = !pillanatfelvétel;
+                else if(e.getKeyCode() == java.awt.event.KeyEvent.VK_G)
+                    várakozás /= 2;
+                else if(e.getKeyCode() == java.awt.event.KeyEvent.VK_L)
+                    várakozás *= 2;
+                repaint();
+            }
+        });
+        addMouseListener(new java.awt.event.MouseAdapter() {
+                int x = m.getX()/cellaSzélesség;
+                int y = m.getY()/cellaMagasság;
+                rácsok[rácsIndex][y][x] = !rácsok[rácsIndex][y][x];
+                repaint();
+            }
+        });
+        addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            // Vonszolással jelöljük ki a négyzetet:
+            public void mouseDragged(java.awt.event.MouseEvent m) {
+                int x = m.getX()/cellaSzélesség;
+                int y = m.getY()/cellaMagasság;
+                rácsok[rácsIndex][y][x] = ÉLŐ;
+                repaint();
+            }
+        });
+        cellaSzélesség = 10;
+        cellaMagasság = 10;
+        try {
+            robot = new java.awt.Robot(
+                    java.awt.GraphicsEnvironment.
+                    getLocalGraphicsEnvironment().
+                    getDefaultScreenDevice());
+        } catch(java.awt.AWTException e) {
+            e.printStackTrace();
+        }
+        setTitle("Sejtautomata");
+        setResizable(false);
+        setSize(szélesség*cellaSzélesség,
+                magasság*cellaMagasság);
+        setVisible(true);
+        new Thread(this).start();
+    }
+    public void paint(java.awt.Graphics g) {
+        boolean [][] rács = rácsok[rácsIndex];
+        for(int i=0; i<rács.length; ++i) { // végig lépked a sorokon
+            for(int j=0; j<rács[0].length; ++j) { // s az oszlopok
+                if(rács[i][j] == ÉLŐ)
+                    g.setColor(java.awt.Color.BLACK);
+                else
+                    g.setColor(java.awt.Color.WHITE);
+                g.fillRect(j*cellaSzélesség, i*cellaMagasság,
+                        cellaSzélesség, cellaMagasság);
+                g.setColor(java.awt.Color.LIGHT_GRAY);
+                g.drawRect(j*cellaSzélesség, i*cellaMagasság,
+                        cellaSzélesség, cellaMagasság);
+            }
+        }
+        if(pillanatfelvétel) {
+            pillanatfelvétel = false;
+            pillanatfelvétel(robot.createScreenCapture
+                    (new java.awt.Rectangle
+                    (getLocation().x, getLocation().y,
+                    szélesség*cellaSzélesség,
+                    magasság*cellaMagasság)));
+        }
+    }
+    public int szomszédokSzáma(boolean [][] rács,
+            int sor, int oszlop, boolean állapot) {        
+        int állapotúSzomszéd = 0;
+        for(int i=-1; i<2; ++i)
+            for(int j=-1; j<2; ++j)
+                if(!((i==0) && (j==0))) {
+            int o = oszlop + j;
+            if(o < 0)
+                o = szélesség-1;
+            else if(o >= szélesség)
+                o = 0;
+            
+            int s = sor + i;
+            if(s < 0)
+                s = magasság-1;
+            else if(s >= magasság)
+                s = 0;
+            
+            if(rács[s][o] == állapot)
+                ++állapotúSzomszéd;
+                }
+        
+        return állapotúSzomszéd;
+    }
+    public void időFejlődés() {
+        
+        boolean [][] rácsElőtte = rácsok[rácsIndex];
+        boolean [][] rácsUtána = rácsok[(rácsIndex+1)%2];
+        
+        for(int i=0; i<rácsElőtte.length; ++i) { // sorok
+            for(int j=0; j<rácsElőtte[0].length; ++j) { // oszlopok
+                
+                int élők = szomszédokSzáma(rácsElőtte, i, j, ÉLŐ);
+                
+                if(rácsElőtte[i][j] == ÉLŐ) {
+                    if(élők==2 || élők==3)
+                        rácsUtána[i][j] = ÉLŐ;
+                    else
+                        rácsUtána[i][j] = HALOTT;
+                }  else {
+                    if(élők==3)
+                        rácsUtána[i][j] = ÉLŐ;
+                    else
+                        rácsUtána[i][j] = HALOTT;
+                }
+            }
+        }
+        rácsIndex = (rácsIndex+1)%2;
+    }
+    public void run() {
+        
+        while(true) {
+            try {
+                Thread.sleep(várakozás);
+            } catch (InterruptedException e) {}
+            
+            időFejlődés();
+            repaint();
+        }
+    }
+    public void sikló(boolean [][] rács, int x, int y) {
+        
+        rács[y+ 0][x+ 2] = ÉLŐ;
+        rács[y+ 1][x+ 1] = ÉLŐ;
+        rács[y+ 2][x+ 1] = ÉLŐ;
+        rács[y+ 2][x+ 2] = ÉLŐ;
+        rács[y+ 2][x+ 3] = ÉLŐ;
+        
+    }
+    public void siklóKilövő(boolean [][] rács, int x, int y) {
+        
+        rács[y+ 6][x+ 0] = ÉLŐ;
+        rács[y+ 6][x+ 1] = ÉLŐ;
+        rács[y+ 7][x+ 0] = ÉLŐ;
+        rács[y+ 7][x+ 1] = ÉLŐ;
+        
+        rács[y+ 3][x+ 13] = ÉLŐ;
+        
+        rács[y+ 4][x+ 12] = ÉLŐ;
+        rács[y+ 4][x+ 14] = ÉLŐ;
+        
+        rács[y+ 5][x+ 11] = ÉLŐ;
+        rács[y+ 5][x+ 15] = ÉLŐ;
+        rács[y+ 5][x+ 16] = ÉLŐ;
+        rács[y+ 5][x+ 25] = ÉLŐ;
+        
+        rács[y+ 6][x+ 11] = ÉLŐ;
+        rács[y+ 6][x+ 15] = ÉLŐ;
+        rács[y+ 6][x+ 16] = ÉLŐ;
+        rács[y+ 6][x+ 22] = ÉLŐ;
+        rács[y+ 6][x+ 23] = ÉLŐ;
+        rács[y+ 6][x+ 24] = ÉLŐ;
+        rács[y+ 6][x+ 25] = ÉLŐ;
+        
+        rács[y+ 7][x+ 11] = ÉLŐ;
+        rács[y+ 7][x+ 15] = ÉLŐ;
+        rács[y+ 7][x+ 16] = ÉLŐ;
+        rács[y+ 7][x+ 21] = ÉLŐ;
+        rács[y+ 7][x+ 22] = ÉLŐ;
+        rács[y+ 7][x+ 23] = ÉLŐ;
+        rács[y+ 7][x+ 24] = ÉLŐ;
+        
+        rács[y+ 8][x+ 12] = ÉLŐ;
+        rács[y+ 8][x+ 14] = ÉLŐ;
+        rács[y+ 8][x+ 21] = ÉLŐ;
+        rács[y+ 8][x+ 24] = ÉLŐ;
+        rács[y+ 8][x+ 34] = ÉLŐ;
+        rács[y+ 8][x+ 35] = ÉLŐ;
+        
+        rács[y+ 9][x+ 13] = ÉLŐ;
+        rács[y+ 9][x+ 21] = ÉLŐ;
+        rács[y+ 9][x+ 22] = ÉLŐ;
+        rács[y+ 9][x+ 23] = ÉLŐ;
+        rács[y+ 9][x+ 24] = ÉLŐ;
+        rács[y+ 9][x+ 34] = ÉLŐ;
+        rács[y+ 9][x+ 35] = ÉLŐ;
+        
+        rács[y+ 10][x+ 22] = ÉLŐ;
+        rács[y+ 10][x+ 23] = ÉLŐ;
+        rács[y+ 10][x+ 24] = ÉLŐ;
+        rács[y+ 10][x+ 25] = ÉLŐ;
+        
+        rács[y+ 11][x+ 25] = ÉLŐ;
+        
+    }
+    public void pillanatfelvétel(java.awt.image.BufferedImage felvetel) {
+        // A pillanatfelvétel kép fájlneve
+        StringBuffer sb = new StringBuffer();
+        sb = sb.delete(0, sb.length());
+        sb.append("sejtautomata");
+        sb.append(++pillanatfelvételSzámláló);
+        sb.append(".png");
+        // png formátumú képet mentünk
+        try {
+            javax.imageio.ImageIO.write(felvetel, "png",
+                    new java.io.File(sb.toString()));
+        } catch(java.io.IOException e) {
+            e.printStackTrace();
+        }
+    }  
+    public void update(java.awt.Graphics g) {
+        paint(g);
+    }
+    public static void main(String[] args) {
+        new Sejtautomata(100, 75);
+    }
+}                
+
+      	]]></programlisting>
+        <para>
+          A program elején megadjuk, hogy egy sejt lehet élő vagy halott. A feladatban 2 rácsfélét használunk, az egyik rács a sejt állapotát fogja tárolni míg a második az egy másdopercel későbbi tulajdonságait. Meghatározzuk az aktuális rácsot a rácsIndex-el. Utánna pedig egy cella magasságát és szélességét, ezt követően pedig, hogy hány cellából álljon a "játék". A következő hogy a az állapotok között mennyi idő teljen el. A függvények közül az első függvény megkapja a méreteket és létrehozza az ablakot. Itt készíti el a 2 rácsot is és az indexet is elindítja. Kezdetben minden rács HALOTT. Ezen belül lesz meghívva a siklólövő aminek a kód végén minden kordinátája megvan adva.  Vannak billentyűről beérkezőparancsaink is, különböző feladatokkal ellátva pl a "g" betűvel, a két állapot közötti időt csökkentjük. Ugyan így vannak az egérrel történő infromációk feldolgozására szolgáló függvények. Külön a kattintásra és a mozgatásra. Külön tudunk készíteni pillanatfelvételt az aktuális állapotról az "s" gomb segítségével. A programban a sejtér rajzolását a paint() függvénnyel végezzük. A szomszédokSzáma() függvéynben vizsgáljuk a szabályokat és aszerint történik a sejtek viselkedése.
+        </para>
+         <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/7.csomag/javar.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>  
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/7.csomag/javar2.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>             
+    </section>        
+    <section>
+        <title>Qt C++ életjáték</title>
+        <para>
+            Most alkossuk meg az életjátékot Qt C++-ban is. A program lényege itt is ugyan az mint a java-ban, ugyan azok a szabályok. Ha kettő vagy gárom szomszédja van, akkor életben marad, ha 2 nél kevesebb kipustul, ha 3 nál több, akkor tulnépesedés miatt pusztul ki. Itt is a siklóágyú lesz a fő célunk.
+        </para>
+        <para>
+            Megoldás forrása: <link xlink:href="https://sourceforge.net/p/udprog/code/ci/master/tree/source/labor/Qt/Sejtauto/">https://sourceforge.net/p/udprog/code/ci/master/tree/source/labor/Qt/Sejtauto/</link>               
+        </para>
+        <para>
+            Kód:(ez csak a main.cpp a többi szükséges fájl a forrásnál található.)
+        </para>
+         <programlisting language="c"><![CDATA[   
+#include <QApplication>
+#include "sejtablak.h"
+#include <QDesktopWidget>
+
+int main(int argc, char *argv[])
+{
+  QApplication a(argc, argv);
+  SejtAblak w(100, 75);
+  w.show();
+  
+  return a.exec();
+}
+      	]]></programlisting>
+        <para>
+          A forrásfájljaink a Sejtablak.cpp , sejtszal.h, sejtszal.cpp és a sejtablak.h . Ezek az átláthatóság miatt vannak külön. A sejtablak.h és .cpp tartalmazza a függvényeket amivel majd a kirajzolás fog történni és ebben van a sikló lövés is,úgy mint a java-s párjánál, külön minden egyes cellát megadunk amiben sejt van. A szejtszal.h és .c pedig az életjátékhoz szükséges szabályokat . Ezen belül vannak a függvények melyek az adott állapotokat vizsgálják és a szabáylok szerint alakítják a programot.         
+        </para>    
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/7.csomag/rend.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>            
+    </section>        
+    <section>
+        <title>BrainB Benchmark</title>
+        <para>
+            Tutorált: Földesi Zoltán
+        </para>
+        <para>
+        	Elsőnek is a Benchmark jelentését nézzük meg. A benchmark egy elemzés, tesztfeladat. Egy bizonyos tesztet végez el és azt az elért pontszám alapján összehasonlítja a tesztet elvégzők között. Ilyen például  telefonok teljesítményét végző benchmark , vagy az esetünkben az agy teljesítményét vizsgáló Bencmark. Ennek segítségével tudunk egy vizsonyítási alapot venni egy adott feladatban. Például a telefonoknál, hogy minél több pontot ér el annál jobb a teljesítménye és össze tudjuk hasonlítani más telefonok teljesítményével. Ugyan így a BraniBenchmarkban, a tesztet megoldó emberek közül az adott pontszám megadja hogy ki teljesített a legjobban és egymáshoz is tudjuk vizsonyítani őket.
+        	Az adott programunk az egyének figyelemképpeségét és koncentrációját fogja vizsgálni. Adott egy karakter, ami a mi karakterünk és azon kell tartanunk az egér kurzort. A program azt vizsgálja, hogy mennyi ideig vagyunk képesek a kurzort a mi karakterünkön tartani, azaz meddig nem veszítjük el azt. Persze nem ilyen egyszerű, mert közben rengeteg új karakter jelenik meg a monitoron befolyásolva ezzel minket, hogy el ne veszítsük a karakterünket. A program arra is reagál, ha elveszítjük a karakterünk. 
+        </para>
+        <para>
+        	Az adott programban a mi karakterünk Samu lesz. Samut figyelemmel kell tartani. Ahogy fent említettem ezt a kurzorral fogjuk megtenni. Minél tovább tartjuk Samun a kurzort annál több másik karakter lesz a képernyőn, A feladat 10 percig tart és annál jobb vagy ha minél több kis karakter között is megtudod tartani a saját karaktered.  Ha elveszítenéd abban az esetben belassul az új karakterek megjelenése míg meg nem találod. Annál jobban teljesítettél, minél több pontod van a 10 perc végén.
+        </para>
+           <para>
+            Megoldás forrása: <link xlink:href="https://github.com/nbatfai/esport-talent-search">https://github.com/nbatfai/esport-talent-search</link>   
+        </para>
+        <para>
+            Kód: 
+        </para>
+        <programlisting language="c"><![CDATA[   
+eturn a.exec();
+#include <QApplication>
+#include <QTextStream>
+#include <QtWidgets>
+#include "BrainBWin.h"
+
+int main ( int argc, char **argv )
+{
+        QApplication app ( argc, argv );
+
+        QTextStream qout ( stdout );
+        qout.setCodec ( "UTF-8" );
+
+        qout << "\n" << BrainBWin::appName << QString::fromUtf8 ( " Copyright (C) 2017, 2018 Norbert Bátfai" ) << endl;
+
+        qout << "This program is free software: you can redistribute it and/or modify it under" << endl;
+        qout << "the terms of the GNU General Public License as published by the Free Software" << endl;
+        qout << "Foundation, either version 3 of the License, or (at your option) any later" << endl;
+        qout << "version.\n" << endl;
+
+        qout << "This program is distributed in the hope that it will be useful, but WITHOUT" << endl;
+        qout << "ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS" << endl;
+        qout << "FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\n" << endl;
+
+        qout << QString::fromUtf8 ( "Ez a program szabad szoftver; terjeszthető illetve módosítható a Free Software" ) << endl;
+        qout << QString::fromUtf8 ( "Foundation által kiadott GNU General Public License dokumentumában leírtak;" ) << endl;
+        qout << QString::fromUtf8 ( "akár a licenc 3-as, akár (tetszőleges) későbbi változata szerint.\n" ) << endl;
+
+        qout << QString::fromUtf8 ( "Ez a program abban a reményben kerül közreadásra, hogy hasznos lesz, de minden" ) << endl;
+        qout << QString::fromUtf8 ( "egyéb GARANCIA NÉLKÜL, az ELADHATÓSÁGRA vagy VALAMELY CÉLRA VALÓ" ) << endl;
+        qout << QString::fromUtf8 ( "ALKALMAZHATÓSÁGRA való származtatott garanciát is beleértve. További" ) << endl;
+        qout << QString::fromUtf8 ( "részleteket a GNU General Public License tartalmaz.\n" ) << endl;
+
+        qout << "http://gnu.hu/gplv3.html" << endl;
+
+        QRect rect = QApplication::desktop()->availableGeometry();
+        BrainBWin brainBWin ( rect.width(), rect.height() );
+        brainBWin.setWindowState ( brainBWin.windowState() ^ Qt::WindowFullScreen );
+        brainBWin.show();
+        return app.exec();
+}
+      	]]></programlisting>
+        <para>
+            Ez ismét egy QT program, az összes szükséges fájl megtalaálható a forrásnál. Fent csak a main.cpp látható de itt a többiről is beszélünk. Először nézzük a BraintBTheard.cpp-t. Itt áll elő a kezdő pozíció. Létrejön a mi karakterünk és 4 másik karakter. Ezek úgy vannak mindig elhelyezve, hogy mindig egymás közelébe legyenek, hogy a feladatunk ne legyen túl könnyű. A run függvény a teszt indításáért felel. Itt méri az időt is, azaz a program addig fut amíg az idő a megaditt időnl(10 perc) kisebb. Itt található még a pause függvény aminek a neve a válasz. A következő BraintBTheard.cpp található a karakterek kinézete, ezeknek a neve programon belül "hero" azaz hős.  Itt adjuk meg a nevét, az elhelyeszkedését, színét, és a mozgásának a gyorsaságát. Továbbá a többi karakter születése, gyorsasága és további információkat róluk itt adunk meg. A BrainBWin.cpp -ben megadjuk a program nevét a verzió számát. majd az UpdateHeroes függvényben zajlik a a kurzorunk menetének vizsgálata, itt figyeli hogy rajta vagyunk e az egérrel a karakteren, hányszor veszítettük el a karakterünk, vagy hogy éppen fut e a teszt. Ezek utána a kövezkező függvény kirajzolja az ablakot. Itt van továbra az óra megjelenítése vagy a pontszámunkké. Ezek után jön az egér funkciói. Például ha lenyomjuk akkor elindul. Vagy az elmozdítás követése, És a billenytyűzetről bevitt karaktereket is itt dolgozza fel. 
+        </para>  
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/7.csomag/bra.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>           
+    </section>        
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+</chapter>                

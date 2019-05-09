@@ -1,0 +1,159 @@
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude" version="5.0" xml:lang="hu">
+    <info>
+        <title>Helló, Schwarzenegger!</title>
+        <keywordset>
+            <keyword/>
+        </keywordset>
+    </info>
+    <section>
+        <title>Szoftmax Py MNIST</title>
+        <para>
+            Python
+        </para>
+        <para>
+            Először is a Python nyelvet mutatjuk be. A nyelv egy magas színtű programozási nyelv. 1991 ben került nyilvánosság elé, amit Guido holland származású programozó fejlesztett. A python interpreteres nyelv.
+        </para>
+        <para>
+            A Minst kézzel írott számok adatbázisa (6000 kép). Ez az alapja azoknak a programoknak ami képről ismeri fel a tárgyakat. A kézel beírt számokról a program el fogja dönteni hogy milyen szám, ez azért érdekes, mert a kézzel írott írás szinte mindenkinél másabb, viszont a programnak mindig tudnia kell, hogy melyik számot kell felismernie. A programhoz a TensorFlowot használjuk. A TensorFlow a Google által alkotott gépi tanulási rendszer. Sok helyen használják, az egyik leghasználtabb, az a google mapsban található utcakép.Ez neutrális háló helyett itt transzformációs gráfok találhatóak. A TensorFlow nyílt forráskódu, le kell töltenünk a használathoz. Nézzük a kódot. Először is a könyvtárakat amik kellenek, a from kulcsszóval fogjuk ezeket hozzáadni a programhoz. Utánna beimportáljuk a Tensorflow könyvtárt. Ezután következik a main. Ebben van a kiíratás felépítése, hogy hogyan küldjük ki az eredményeket (a képen látszik.). A sess azzaz egy session segítségével fogjuk a tanítást végezni, hasonlóan mint a neurális hálózatnál. Az alaposság kedvéért, hogy minél pontosabb eredményt kapjunk ezerszer futtatjuk a ciklust. Ztánna kííratjuk mennyire lett pontos az eredmény. A programban előszőr felugrik maga a kép ami a kézel írott számot taartalmazza(ehez a matplotbit-ot hasznéljuk, hogy meg tudjuk rajzolni), ha ezt bezárjuk jön a következő kép, a képeket az aktuális mappában lementjük. A programnak elég nagy a pontossága, jól felismeri. Az eredményeket egy tömben tárolja el a program.          
+        </para> 
+        <para>
+            Megoldás forrása: <link xlink:href="https://github.com/tensorflow/tensorflow/releases/tag/v0.9.0">https://github.com/tensorflow/tensorflow/releases/tag/v0.9.0</link> (/tensorflow-0.9.0/tensorflow/examples/tutorials/mnist/), <link xlink:href="https://progpater.blog.hu/2016/11/13/hello_samu_a_tensorflow-bol">https://progpater.blog.hu/2016/11/13/hello_samu_a_tensorflow-bol</link>  
+        </para>
+        <programlisting language="c"><![CDATA[
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import argparse
+
+# Import data
+from tensorflow.examples.tutorials.mnist import input_data
+
+import tensorflow as tf
+
+import matplotlib.pyplot
+
+
+FLAGS = None
+
+def main(_):
+  mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
+
+  # Create the model
+  x = tf.placeholder(tf.float32, [None, 784])
+  W = tf.Variable(tf.zeros([784, 10]))
+  b = tf.Variable(tf.zeros([10]))
+  y = tf.matmul(x, W) + b
+
+  # Define loss and optimizer
+  y_ = tf.placeholder(tf.float32, [None, 10])
+
+  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, y_))
+  train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+
+  sess = tf.InteractiveSession()
+  # Train
+  tf.initialize_all_variables().run()
+  print("-- A halozat tanitasa")  
+  for i in range(1000):
+    batch_xs, batch_ys = mnist.train.next_batch(100)
+    sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+    if i % 100 == 0:
+      print(i/10, "%")
+  print("----------------------------------------------------------")
+
+  # Test trained model
+  print("-- A halozat tesztelese")  
+  correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))  
+  print("-- Pontossag: ", sess.run(accuracy, feed_dict={x: mnist.test.images,
+                                      y_: mnist.test.labels}))
+  print("----------------------------------------------------------")
+  
+  print("-- A MNIST 42. tesztkepenek felismerese, mutatom a szamot, a tovabblepeshez csukd be az ablakat")
+  
+  img = mnist.test.images[42]
+  image = img
+
+  matplotlib.pyplot.imshow(image.reshape(28, 28), cmap=matplotlib.pyplot.cm.binary)
+  matplotlib.pyplot.savefig("4.png")  
+  matplotlib.pyplot.show()
+
+  classification = sess.run(tf.argmax(y, 1), feed_dict={x: [image]})
+
+  print("-- Ezt a halozat ennek ismeri fel: ", classification[0])
+  print("----------------------------------------------------------")
+
+  print("-- A sajat kezi 8-asom felismerese, mutatom a szamot, a tovabblepeshez csukd be az ablakat")
+
+  img = readimg()
+  image = img.eval()
+  image = image.reshape(28*28)
+
+  matplotlib.pyplot.imshow(image.reshape(28, 28), cmap=matplotlib.pyplot.cm.binary)
+  matplotlib.pyplot.savefig("8.png")  
+  matplotlib.pyplot.show()
+
+  classification = sess.run(tf.argmax(y, 1), feed_dict={x: [image]})
+
+  print("-- Ezt a halozat ennek ismeri fel: ", classification[0])
+  print("----------------------------------------------------------")
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--data_dir', type=str, default='/tmp/tensorflow/mnist/input_data',
+                      help='Directory for storing input data')
+  FLAGS = parser.parse_args()
+  tf.app.run()
+
+        	]]></programlisting>
+        <para>
+           
+        </para>
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/5Mandelbrot/4.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/5Mandelbrot/8.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/5Mandelbrot/ma.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+    </section>           
+
+    <section>
+        <title>Mély MNIST</title>
+        <para>
+            Python            
+        </para>
+        <para>
+            Itt használom fel az első passzolási lehetőséget a SMNISTforHumansExp3 ban elért és közzé tett eredmény miatt.
+        </para>
+    </section>              
+                  
+    <section>
+        <title>Minecraft-MALMÖ</title>
+        <para>
+            Megoldás forrása: <link xlink:href="https://bhaxor.blog.hu/9999/12/31/minecraft_steve_szemuvege">https://bhaxor.blog.hu/9999/12/31/minecraft_steve_szemuvege</link>
+        </para>
+        <para>
+        	Kezdjük azzal, hogy mi is az a Malmö. Ez egy Microsoft projekt a neve Project Malmo. A lényege pedig, hogy a mesterséges inteligencia segítségével feldolgozzuk az adott környezetet. A kísérletet az ismert játékban a Minecraftban végezzük. A feladat lényege, hogy mesterséges inteligenciával övezzük fel a karaktert és elíndítjuk utjára, a MI feladata, hogy a környezetet érzékelje a karakter és kikerülje az akadályokat, ne akadjon el. A szükséges fájlok megtalálhatók a Microsoft Githubján. A feladat megoldása a következő. Mindig adott egy kocka amin a karakterünk épp áll, ez a kocka kürüli 26 kockábol álló területet fogja a program vizsgálni. Azaz összesen 27 kockát vizsgálunk. Ezeket a kockákat megkülönbözetjük. Ugye a játékban lehet fű (fold is az), levegő, magasfű, levél. Ezeket vizsgálva kell a programnak eldönteni hogy a karakter merre mozogjon. Ehez szükséges még parancsokat létrehoznunk, hogy a karakter hogyan mozogjon, mit tegyen ha akadályba ütközik, pl ha magas blokk, akkor ugorjon, vagy ha fa van elötte kerülje ki. Nézzen körbe merre tud menni.
+        </para>
+        <para>
+            Megoldás videó:
+        </para>
+        <para>
+            Megoldás forrása:                
+        </para>
+        <para>
+            Tanulságok, tapasztalatok, magyarázat...
+        </para>
+    </section>        
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+</chapter>                

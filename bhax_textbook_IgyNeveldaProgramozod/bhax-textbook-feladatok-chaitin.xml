@@ -1,0 +1,81 @@
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude" version="5.0" xml:lang="hu">
+    <info>
+        <title>Helló, Chaitin!</title>
+        <keywordset>
+            <keyword/>
+        </keywordset>
+    </info>
+    <section>
+        <title>Iteratív és rekurzív faktoriális Lisp-ben</title>
+        <para>
+            Tutor:Földesi Zoltán
+        </para>
+        <para>
+        	A lisp programozási nyelv a mesterséges inteligenciát kutatók kedvelt nyelve, eredetileg nem ez volt a célja, de hamar az MI kutatásban lett használatos. Neve jelentése a listafeldolgozás, mivel a programok felépítése láncolt lista(zárojelekkel választjuk el a listákat ). A lisp egy kifejezésorientált nyelv.
+        </para>
+        <para>
+           Nézzük meg elsőnek Iteratív módon.     
+        </para>
+        <programlisting language="c"><![CDATA[
+(defun faktorialisi (n)
+    (do
+       ((i 1 (+ 1 i))
+        (prod 1 (* i prod)))
+       ((equal i (+ n 1)) prod)))
+        	]]></programlisting>
+        <para>
+        	Az elején a defun-al adjuk meg a függvény nevét és a változót amibe majd az érték érkezik. A do egy konstrukció, ezt iteratív programoknál használjuk mint ez is(iteratív struktúra). a (+ 1 i)-ben növeli az i értékét 1 el  utánna végzi el a szorzást aztán növeli az n et, amíg szükséges.
+        </para>
+        <para>
+        	Rekurzív módon:
+        </para>
+        <programlisting language="c"><![CDATA[
+(defun faktorialisr(n)
+(if (= n 1)
+    1
+    (* n (faktorialisr (- n 1)))))
+    ]]></programlisting>
+    <para>
+    	Az előző program rekurzív változata. Az elején a defunnal adjuk meg a nevet és a paramétert. Aztán if el vizsgáljuk hogy n egyenlő e 1 el, ha egyenlő akkor meghívja önmagát n-1 re és összeszorozza az n el. 
+    </para>
+       <para>
+            Megoldás videó: <link xlink:href="https://youtu.be/z6NJE2a1zIA">https://youtu.be/z6NJE2a1zIA</link>      
+        </para>
+        <mediaobject>
+        	<imageobject condition="printf">
+        		<imagedata fileref="/home/kissmate3/Desktop/Prog1/5Mandelbrot/fakt.png" format="PNG" scale="30"/>
+        	</imageobject>
+        </mediaobject>
+    </section>        
+
+    <section>
+        <title>Gimp Scheme Script-fu: króm effekt</title>
+        <para>
+            Írj olyan script-fu kiterjesztést a GIMP programhoz, amely megvalósítja a króm effektet egy 
+            bemenő szövegre!
+        </para>
+        <para>
+            Megoldás videó: <link xlink:href="https://youtu.be/OKdAkI_c7Sc">https://youtu.be/OKdAkI_c7Sc</link>      
+        </para>
+        <para>
+            Megoldás forrása: <link xlink:href="https://gitlab.com/nbatfai/bhax/tree/master/attention_raising/GIMP_Lisp/Chrome">https://gitlab.com/nbatfai/bhax/tree/master/attention_raising/GIMP_Lisp/Chrome</link>               
+        </para>  
+    </section>        
+
+    <section>
+        <title>Gimp Scheme Script-fu: név mandala</title>
+        <para>
+            Írj olyan script-fu kiterjesztést a GIMP programhoz, amely név-mandalát készít a
+            bemenő szövegből!               
+        </para>
+        <para>
+            Megoldás videó: <link xlink:href="https://bhaxor.blog.hu/2019/01/10/a_gimp_lisp_hackelese_a_scheme_programozasi_nyelv">https://bhaxor.blog.hu/2019/01/10/a_gimp_lisp_hackelese_a_scheme_programozasi_nyelv</link>      
+        </para>
+        <para>
+            Megoldás forrása: <link xlink:href="https://gitlab.com/nbatfai/bhax/tree/master/attention_raising/GIMP_Lisp/Mandala">https://gitlab.com/nbatfai/bhax/tree/master/attention_raising/GIMP_Lisp/Mandala</link>               
+        </para>
+        <para>
+             Itt használom fel a második passzolási lehetőséget a SMNISTforHumansExp3 ban elért és közzé tett eredmény miatt.
+        </para>            
+    </section>                             
+</chapter>                
